@@ -1499,8 +1499,8 @@ class Pack(object):
                             logging.info("Updating changelog entries for modified release notes")
                             for version, modified_release_notes_lines in modified_release_notes_lines_dict.items():
                                 versions, _ = self.get_same_block_versions(release_notes_dir, version, changelog)
-                                all_relevant_pr_nums_for_unified: set = {pr_num for version in versions.keys()
-                                                                         for pr_num in version_to_prs[version]}
+                                all_relevant_pr_nums_for_unified = list({pr_num for version in versions.keys()
+                                                                        for pr_num in version_to_prs[version]})
                                 logging.debug(f"{all_relevant_pr_nums_for_unified=}")
                                 updated_entry = self._get_updated_changelog_entry(
                                     changelog, version, release_notes=modified_release_notes_lines,
