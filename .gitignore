@@ -58,3 +58,4 @@ Packs/**/report_pytest.json
 **/.devcontainer
 !/.devcontainer
 
+package-lock.json
