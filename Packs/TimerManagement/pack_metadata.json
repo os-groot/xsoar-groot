@@ -1,0 +1,27 @@
+{
+    "name": "Timers Management",
+    "description": "Contains automations to enforce control on SLA/Timer Fields to e.g prevent modification of timers manually by users",
+    "support": "community",
+    "currentVersion": "1.0.0",
+    "author": "Omar Salim Ahmed",
+    "url": "https://live.paloaltonetworks.com/t5/cortex-xsoar-discussions/bd-p/Cortex_XSOAR_Discussions",
+    "email": "",
+    "categories": [
+        "Utilities"
+    ],
+    "tags": [
+        "field-change-triggered"
+    ],
+    "useCases": [],
+    "keywords": [],
+    "marketplaces": [
+        "xsoar",
+        "marketplacev2"
+    ],
+    "devEmail": [
+        "oahmed@paloaltonetworks.com"
+    ],
+    "githubUser": [
+        "os-groot"
+    ]
+}
