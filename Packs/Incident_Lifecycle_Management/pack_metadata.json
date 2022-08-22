@@ -1,0 +1,28 @@
+{
+    "name": "Incident Lifecycle Management",
+    "description": "This pack contains automations, lists, and layouts to aid in managing an incident's lifecycle",
+    "support": "community",
+    "currentVersion": "1.0.0",
+    "author": "Omar Salim Ahmed",
+    "url": "https://live.paloaltonetworks.com/t5/cortex-xsoar-discussions/bd-p/Cortex_XSOAR_Discussions",
+    "email": "",
+    "categories": [
+        "Case Management"
+    ],
+    "tags": [
+        "incident-lifecycle",
+        "incident-management",
+        "timers",
+        "sla"
+    ],
+    "useCases": [],
+    "keywords": [],
+    "marketplaces": [
+        "xsoar",
+        "marketplacev2"
+    ],
+    "devEmail": [
+        "oahmed@paloaltonetworks.com"
+    ],
+    "githubUser": []
+}
