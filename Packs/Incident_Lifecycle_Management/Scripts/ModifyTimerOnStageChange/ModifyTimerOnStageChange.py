@@ -90,8 +90,8 @@ def modify_timer(args: Dict[str, Any]) -> Any:
     new = args.get("new")
     # Check if it is a working day
     is_workday = is_working_day()
-    y_dict = load_yaml_list(list_name)
-    acts = y_dict.get(old).get('NextStages').get(new)
+    config_dict = load_yaml_list(list_name)
+    acts = config_dict.get(old).get('NextStages').get(new)
     actions_taken = []
     for act in acts:
         if act.get('weekdayOnly') and is_workday:
@@ -117,7 +117,7 @@ def modify_timer(args: Dict[str, Any]) -> Any:
 def main():
     try:
         # TODO: replace the invoked command function with yours
-        return_results(modify_timer(demisto.args()))
+        return_results(modify_timer(args=demisto.args()))
     except Exception as ex_str:
         return_error(f'Failed to execute Modify Timer On Stage Change. Error: {str(ex_str)}')
 
