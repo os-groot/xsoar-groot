@@ -16,7 +16,7 @@ LIST_TYPE: str = ''
 ''' STANDALONE FUNCTION '''
 
 
-def load_list(xsoar_list: str) -> Dict:
+def load_list(xsoar_list: str) -> Union[Dict, str]:
     load_res = demisto.executeCommand('getList', {'listName': xsoar_list})
     if (
             not isinstance(load_res, list)
@@ -39,6 +39,8 @@ def load_list(xsoar_list: str) -> Dict:
         except yaml.YAMLError as err:
             raise ValueError(f'List does not contain valid YAML data: {err}')
         return list_data
+    else:
+        return raw_data
 
 
 def is_working_day(list_name: str = '') -> bool:
