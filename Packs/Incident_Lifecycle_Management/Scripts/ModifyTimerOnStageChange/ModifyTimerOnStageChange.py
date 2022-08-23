@@ -1,7 +1,9 @@
-# from .. import demistomock as demisto
+from CommonServerPython import __line__
+from .. import demistomock as demisto, CommonServerPython
 from ..CommonServerPython import *
-# from ..CommonServerUserPython import *
+from ..CommonServerUserPython import *
 
+register_module_line('ModifyTimerOnStageChange', 'start', __line__())
 from typing import Dict, Any
 import json
 import datetime
@@ -101,14 +103,14 @@ def modify_timer(args: Dict[str, Any]) -> Any:
         raise ValueError('xsoar_list not specified')
     old: str = args_to_string(args, 'old')
     new: str = args_to_string(args, 'new')
-    # Check if it is a working day
-    is_workday = is_working_day()
     config_dict = load_list(list_name)
     # Return Error if new stage is not in allowed Next Stages
     if not check_next_stage(old=old, new=new, config_dict=config_dict):
         next_stages = config_dict.get(old).get('NextStages').keys()
         err_str = f'Moving From Stage: {old} to Stage: {new} is not allowed. Allowed stages are: {next_stages}'
         return_error(error=err_str, message=err_str)
+    # Take action on timers
+    is_workday = is_working_day()  # Check if it is a working day
     acts = config_dict.get(old).get('NextStages').get(new)
     actions_taken = []
     for act in acts:
@@ -146,3 +148,4 @@ def main():
 
 if __name__ in ('__main__', '__builtin__', 'builtins'):
     main()
+register_module_line('ModifyTimerOnStageChange', 'end', __line__())

@@ -1,61 +1,34 @@
-"""Base Script for Cortex XSOAR (aka Demisto)
+# from .. import demistomock as demisto
+from CommonServerPython import __line__
+from ..CommonServerPython import *
 
-This is an empty script with some basic structure according
-to the code conventions.
-
-MAKE SURE YOU REVIEW/REPLACE ALL THE COMMENTS MARKED AS "TODO"
-
-Developer Documentation: https://xsoar.pan.dev/docs/welcome
-Code Conventions: https://xsoar.pan.dev/docs/integrations/code-conventions
-Linting: https://xsoar.pan.dev/docs/integrations/linting
-
-"""
-
-import demistomock as demisto
-from CommonServerPython import *
-from CommonServerUserPython import *
-
+# from ..CommonServerUserPython import *
+register_module_line('ModifyStageOnAssignment', 'start', __line__())
 from typing import Dict, Any
-
 
 ''' STANDALONE FUNCTION '''
 
 
-# TODO: REMOVE the following dummy function:
-def basescript_dummy(dummy: str) -> Dict[str, str]:
-    """Returns a simple python dict with the information provided
-    in the input (dummy).
-
-    :type dummy: ``str``
-    :param dummy: string to add in the dummy dict that is returned
-
-    :return: dict as {"dummy": dummy}
-    :rtype: ``str``
-    """
-
-    return {"dummy": dummy}
-# TODO: ADD HERE THE FUNCTIONS TO INTERACT WITH YOUR PRODUCT API
+def args_to_string(args: Dict, arg_name: str) -> str:
+    arg_name = arg_name.strip()
+    args = args.get(arg_name, None)
+    if not args:
+        return str(None)
+    stripped_arg = str().strip()
+    return stripped_arg
 
 
 ''' COMMAND FUNCTION '''
 
 
-# TODO: REMOVE the following dummy command function
-def basescript_dummy_command(args: Dict[str, Any]) -> CommandResults:
-
-    dummy = args.get('dummy', None)
-    if not dummy:
-        raise ValueError('dummy not specified')
-
-    # Call the standalone function and get the raw response
-    result = basescript_dummy(dummy)
-
-    return CommandResults(
-        outputs_prefix='Modify Stage On Assignment',
-        outputs_key_field='',
-        outputs=result,
-    )
-# TODO: ADD additional command functions that translate XSOAR inputs/outputs
+def modify_stage(args: Dict):
+    old: str = args_to_string(args, 'old')
+    new: str = args_to_string(args, 'new')
+    acknowledgment_stage: str = args_to_string(args, 'acknowledgment-stage')
+    if old == '' and new != '':
+        params = {'incidentstage': acknowledgment_stage}
+        demisto.executeCommand('setIncident', args=params)
+    return []
 
 
 ''' MAIN FUNCTION '''
@@ -64,14 +37,15 @@ def basescript_dummy_command(args: Dict[str, Any]) -> CommandResults:
 def main():
     try:
         # TODO: replace the invoked command function with yours
-        return_results(basescript_dummy_command(demisto.args()))
-    except Exception as ex:
+        args = demisto.args()
+        return_results(modify_stage(args=args))
+    except Exception as ex_str:
 
-        return_error(f'Failed to execute Modify Stage On Assignment. Error: {str(ex)}')
+        return_error(f'Failed to execute Modify Stage On Assignment. Error: {str(ex_str)}')
 
 
 ''' ENTRY POINT '''
 
-
 if __name__ in ('__main__', '__builtin__', 'builtins'):
     main()
+register_module_line('ModifyStageOnAssignment', 'end', __line__())

@@ -1,26 +1,23 @@
 args:
 - default: false
-  description: '[Enter a description of the argument, including any important information users need to know, for example, default values.]'
+  defaultValue: Initial
+  description: The stage reperesneting when an analyst acknowledged the incident
   isArray: false
-  name: dummy
+  name: acknowledgment-stage
   required: true
   secret: false
-comment: '[Enter a description of the script, including what function it performs and any important information users need to know, for example required permissions.]'
+comment: Modifies Incident Stage On Owner Change
 commonfields:
   id: Modify Stage On Assignment
   version: -1
 enabled: false
 name: Modify Stage On Assignment
-outputs:
-- contextPath: BaseScript.Output
-  description: '[Enter a description of the data returned in this output.]'
-  type: String
 script: '-'
+subtype: python3
 system: false
 tags:
-- basescript
+- field-change-triggered
 timeout: '0'
 type: python
-subtype: python3
 dockerimage: demisto/python3:3.10.5.31797
 fromversion: '6.0'
