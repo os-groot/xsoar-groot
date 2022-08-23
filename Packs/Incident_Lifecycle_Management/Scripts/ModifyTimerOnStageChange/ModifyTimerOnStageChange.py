@@ -79,6 +79,14 @@ def is_working_day(list_name: str = '') -> bool:
 ''' COMMAND FUNCTION '''
 
 
+def check_next_stage(old, new, config_dict: Dict) -> bool:
+    next_stages = config_dict.get(old).get('NextStages').keys()
+    if new in next_stages:
+        return True
+    else:
+        return False
+
+
 def modify_timer(args: Dict[str, Any]) -> Any:
     mapped_acts = {"start": "startTimer",
                    "stop": "stopTimer",
@@ -91,6 +99,11 @@ def modify_timer(args: Dict[str, Any]) -> Any:
     # Check if it is a working day
     is_workday = is_working_day()
     config_dict = load_yaml_list(list_name)
+    # Return Error if new stage is not in allowed Next Stages
+    if not check_next_stage(old=old, new=new, config_dict=config_dict):
+        next_stages = config_dict.get(old).get('NextStages').keys()
+        err_str = f'Moving From Stage: {old} to Stage: {new} is not allowed. Allowed stages are: {next_stages}'
+        return_error(error=err_str, message=err_str)
     acts = config_dict.get(old).get('NextStages').get(new)
     actions_taken = []
     for act in acts:
