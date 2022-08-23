@@ -1,13 +1,13 @@
-from .. import demistomock as demisto
+# from .. import demistomock as demisto
 from ..CommonServerPython import *
-from ..CommonServerUserPython import *
+# from ..CommonServerUserPython import *
 
 from typing import Dict, Any
 import json
 import datetime
-from textwrap import indent
 import yaml
-import os
+# import os
+# from textwrap import indent
 
 ''' STANDALONE FUNCTION '''
 
@@ -21,7 +21,6 @@ def load_raw_list(xsoar_list: str):
             or load_res[0]['Contents'] == 'Item not found (8)'
     ):
         raise ValueError(f'Cannot retrieve list {xsoar_list}')
-    list_data: Dict = {}
     raw_data: str = load_res[0]['Contents']
     return raw_data
 
