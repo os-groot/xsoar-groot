@@ -6,13 +6,17 @@ from typing import Dict, Any
 import json
 import datetime
 import yaml
+
 # import os
 # from textwrap import indent
+
+'''GLOBALS'''
+LIST_TYPE: str = ''
 
 ''' STANDALONE FUNCTION '''
 
 
-def load_raw_list(xsoar_list: str):
+def load_list(xsoar_list: str) -> Dict:
     load_res = demisto.executeCommand('getList', {'listName': xsoar_list})
     if (
             not isinstance(load_res, list)
@@ -22,34 +26,24 @@ def load_raw_list(xsoar_list: str):
     ):
         raise ValueError(f'Cannot retrieve list {xsoar_list}')
     raw_data: str = load_res[0]['Contents']
-    return raw_data
-
-
-def load_json_list(xsoar_list: Any) -> Dict:
-    raw_data = load_raw_list(xsoar_list)
     list_data: Dict = {}
-    if raw_data and len(raw_data) > 0:
+    if raw_data and len(raw_data) > 0 and LIST_TYPE == 'JSON':
         try:
             list_data = json.loads(raw_data)
         except json.decoder.JSONDecodeError as e:
             raise ValueError(f'List does not contain valid JSON data: {e}')
-    return list_data
-
-
-def load_yaml_list(xsoar_list: str) -> Dict:
-    raw_data = load_raw_list(xsoar_list)
-    list_data: Dict = {}
-    if raw_data and len(raw_data) > 0:
+        return list_data
+    elif raw_data and len(raw_data) > 0 and LIST_TYPE == 'YAML':
         try:
             list_data = yaml.load(raw_data, Loader=yaml.FullLoader)
         except yaml.YAMLError as err:
             raise ValueError(f'List does not contain valid YAML data: {err}')
-    return list_data
+        return list_data
 
 
 def is_working_day(list_name: str = '') -> bool:
     days_of_week = ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
-    work_week = load_yaml_list(list_name)
+    work_week = load_list(list_name)
     start_day = str(work_week.get('StartDay')).lower()
     start_day = days_of_week.index(start_day)
     last_day = str(work_week.get('LastDay')).lower()
@@ -60,6 +54,7 @@ def is_working_day(list_name: str = '') -> bool:
     today = days_of_week[now.weekday()]
     # if today:
     #     print()
+    # Determine if it's a weekday by checking for on call users, on call users are determined by Shifts defined on role
     get_users_response: List = demisto.executeCommand('getUsers', {'onCall': True})
     if is_error(get_users_response):
         demisto.error(f'Failed to get users on call: {str(get_error(get_users_response))}')
@@ -75,9 +70,6 @@ def is_working_day(list_name: str = '') -> bool:
             return is_weekday
 
 
-''' COMMAND FUNCTION '''
-
-
 def check_next_stage(old, new, config_dict: Dict) -> bool:
     next_stages = config_dict.get(old).get('NextStages').keys()
     if new in next_stages:
@@ -86,18 +78,30 @@ def check_next_stage(old, new, config_dict: Dict) -> bool:
         return False
 
 
+def args_to_string(args: Dict, arg_name: str) -> str:
+    arg_name = arg_name.strip()
+    args = args.get(arg_name, None)
+    if not args:
+        return str(None)
+    stripped_arg = str().strip()
+    return stripped_arg
+
+
+''' COMMAND FUNCTION '''
+
+
 def modify_timer(args: Dict[str, Any]) -> Any:
     mapped_acts = {"start": "startTimer",
                    "stop": "stopTimer",
                    "pause": "pauseTimer"}
-    list_name = args.get('xsoar_list', None)
+    list_name = args_to_string(args, 'xsoar-list')
     if not list_name:
         raise ValueError('xsoar_list not specified')
-    old = args.get("old")
-    new = args.get("new")
+    old: str = args_to_string(args, 'old')
+    new: str = args_to_string(args, 'new')
     # Check if it is a working day
     is_workday = is_working_day()
-    config_dict = load_yaml_list(list_name)
+    config_dict = load_list(list_name)
     # Return Error if new stage is not in allowed Next Stages
     if not check_next_stage(old=old, new=new, config_dict=config_dict):
         next_stages = config_dict.get(old).get('NextStages').keys()
@@ -107,18 +111,18 @@ def modify_timer(args: Dict[str, Any]) -> Any:
     actions_taken = []
     for act in acts:
         if act.get('weekdayOnly') and is_workday:
-            action = mapped_acts.get(act.get('action'))
+            xsoar_command = mapped_acts.get(act.get('action'))
             timer = act.get('timerName')
             params = {"timerField": timer}
-            demisto.executeCommand(action, params)
-            action_taken = f'Action {action} taken on Timer: {timer}'
+            demisto.executeCommand(xsoar_command, params)
+            action_taken = f'Action {xsoar_command} taken on Timer: {timer}'
             actions_taken.append(action_taken)
         else:
-            action = mapped_acts.get(act.get('action'))
+            xsoar_command = mapped_acts.get(act.get('action'))
             timer = act.get('timerName')
             params = {"timerField": timer}
-            demisto.executeCommand(action, params)
-            action_taken = f'Action {action} taken on Timer: {timer}'
+            demisto.executeCommand(xsoar_command, params)
+            action_taken = f'Action {xsoar_command} taken on Timer: {timer}'
             actions_taken.append(action_taken)
     return actions_taken
 
@@ -128,6 +132,8 @@ def modify_timer(args: Dict[str, Any]) -> Any:
 
 def main():
     try:
+        global LIST_TYPE
+        LIST_TYPE = args_to_string(demisto.args(), 'type')
         # TODO: replace the invoked command function with yours
         return_results(modify_timer(args=demisto.args()))
     except Exception as ex_str:
