@@ -1,61 +1,105 @@
-"""Base Script for Cortex XSOAR (aka Demisto)
-
-This is an empty script with some basic structure according
-to the code conventions.
-
-MAKE SURE YOU REVIEW/REPLACE ALL THE COMMENTS MARKED AS "TODO"
-
-Developer Documentation: https://xsoar.pan.dev/docs/welcome
-Code Conventions: https://xsoar.pan.dev/docs/integrations/code-conventions
-Linting: https://xsoar.pan.dev/docs/integrations/linting
-
-"""
+import datetime
 
 import demistomock as demisto
 from CommonServerPython import *
 from CommonServerUserPython import *
 
 from typing import Dict, Any
+import yaml
+import dateparser
 
+'''GLOBALS'''
+LIST_TYPE: str = ''
 
 ''' STANDALONE FUNCTION '''
 
 
-# TODO: REMOVE the following dummy function:
-def basescript_dummy(dummy: str) -> Dict[str, str]:
-    """Returns a simple python dict with the information provided
-    in the input (dummy).
+def str_to_iso_format_utc(str_date, local_tz='+0300', to_tz='UTC',
+                          return_date_time=False, is_utc=False) -> Union[str, datetime]:
+    str_date = arg_to_datetime(str_date.strip(), is_utc=is_utc)  # Convert String to DateTime
+    parser_settings = settings = {'TIMEZONE': local_tz, 'TO_TIMEZONE': to_tz,
+                                  'RETURN_AS_TIMEZONE_AWARE': True}
+    str_date_parsed = dateparser.parse(str_date.isoformat(), settings=parser_settings)
+    if return_date_time:
+        return str_date_parsed
+    else:
+        return str_date_parsed.isoformat()
 
-    :type dummy: ``str``
-    :param dummy: string to add in the dummy dict that is returned
 
-    :return: dict as {"dummy": dummy}
-    :rtype: ``str``
-    """
+def args_to_string(args: Dict, arg_name: str) -> str:
+    arg_name = arg_name.strip()
+    args = args.get(arg_name, None)
+    if not args:
+        return str(None)
+    stripped_arg = str().strip()
+    return stripped_arg
 
-    return {"dummy": dummy}
-# TODO: ADD HERE THE FUNCTIONS TO INTERACT WITH YOUR PRODUCT API
+
+def load_list(xsoar_list: str) -> Union[Dict, str]:
+    load_res = demisto.executeCommand('getList', {'listName': xsoar_list})
+    if (
+            not isinstance(load_res, list)
+            or 'Contents' not in load_res[0]
+            or not isinstance(load_res[0]['Contents'], str)
+            or load_res[0]['Contents'] == 'Item not found (8)'
+    ):
+        raise ValueError(f'Cannot retrieve list {xsoar_list}')
+    raw_data: str = load_res[0]['Contents']
+    list_data: Dict = {}
+    if raw_data and len(raw_data) > 0 and LIST_TYPE == 'JSON':
+        try:
+            list_data = json.loads(raw_data)
+        except json.decoder.JSONDecodeError as e:
+            raise ValueError(f'List does not contain valid JSON data: {e}')
+        return list_data
+    elif raw_data and len(raw_data) > 0 and LIST_TYPE == 'YAML':
+        try:
+            list_data = yaml.load(raw_data, Loader=yaml.FullLoader)
+        except yaml.YAMLError as err:
+            raise ValueError(f'List does not contain valid YAML data: {err}')
+        return list_data
+    else:
+        return raw_data
 
 
 ''' COMMAND FUNCTION '''
 
 
-# TODO: REMOVE the following dummy command function
-def basescript_dummy_command(args: Dict[str, Any]) -> CommandResults:
-
-    dummy = args.get('dummy', None)
-    if not dummy:
-        raise ValueError('dummy not specified')
-
-    # Call the standalone function and get the raw response
-    result = basescript_dummy(dummy)
-
-    return CommandResults(
-        outputs_prefix='Modify SLA On Severity Change',
-        outputs_key_field='',
-        outputs=result,
-    )
-# TODO: ADD additional command functions that translate XSOAR inputs/outputs
+def modify_sla(args: Dict):
+    list_name = args_to_string(args, 'xsoar-list')
+    old: str = args_to_string(args, 'old')
+    new: str = args_to_string(args, 'new')
+    severity_map = {'1': 'P4', '2': 'P3', '3': 'P2', '4': 'P1'}
+    config_dict = load_list(list_name)
+    inc = demisto.incident()
+    actions_taken = []
+    for timer_conf in config_dict:
+        severity: str = severity_map.get(new)
+        sla = timer_conf.get(severity)  # Get SLA in minutes for the severity for this timer
+        cli_name = timer_conf.get("cli")
+        timer = demisto.get(inc, f'CustomFields.{cli_name}')
+        due_date = timer.get('dueDate')
+        run_status = demisto.get(timer, 'runStatus')
+        parser_settings = settings = {'TIMEZONE': 'utc', 'RETURN_AS_TIMEZONE_AWARE': True}
+        if str(run_status) not in ['idle', 'ended']:
+            due_date = due_date
+            due_date: str = str_to_iso_format_utc(str_date=due_date, return_date_time=False)
+            curr_due = datetime.datetime.fromisoformat(due_date)
+            sla_due = curr_due + timedelta(minutes=sla)
+            sla_due = sla_due.isoformat()
+            params = {'sla': sla_due, 'slaField': cli_name}
+            demisto.executeCommand('setIncident', params)
+            action_taken = f'Set Timer: {cli_name} SLA to: {sla_due}'
+            actions_taken.append(action_taken)
+        if str(run_status) == 'idle':
+            now = datetime.now(timezone.utc)
+            sla_due = now + timedelta(minutes=sla)
+            sla_due = sla_due.isoformat()
+            params = {'sla': sla, 'slaField': cli_name}
+            demisto.executeCommand('setIncident', params)
+            action_taken = f'Set Timer: {cli_name} SLA to: {sla_due}'
+            actions_taken.append(action_taken)
+    return actions_taken
 
 
 ''' MAIN FUNCTION '''
@@ -64,14 +108,13 @@ def basescript_dummy_command(args: Dict[str, Any]) -> CommandResults:
 def main():
     try:
         # TODO: replace the invoked command function with yours
-        return_results(basescript_dummy_command(demisto.args()))
-    except Exception as ex:
+        return_results(modify_sla(demisto.args()))
+    except Exception as ex_str:
 
-        return_error(f'Failed to execute Modify SLA On Severity Change. Error: {str(ex)}')
+        return_error(f'Failed to execute Modify SLA On Severity Change. Error: {str(ex_str)}')
 
 
 ''' ENTRY POINT '''
-
 
 if __name__ in ('__main__', '__builtin__', 'builtins'):
     main()

@@ -4,7 +4,7 @@ from ..CommonServerPython import *
 
 # from ..CommonServerUserPython import *
 register_module_line('ModifyStageOnAssignment', 'start', __line__())
-from typing import Dict, Any
+from typing import Dict
 
 ''' STANDALONE FUNCTION '''
 
@@ -28,7 +28,8 @@ def modify_stage(args: Dict):
     if old == '' and new != '':
         params = {'incidentstage': acknowledgment_stage}
         demisto.executeCommand('setIncident', args=params)
-    return []
+    action_taken = f'Set Incident Stage to: {acknowledgment_stage} with owner: {new}'
+    return action_taken
 
 
 ''' MAIN FUNCTION '''

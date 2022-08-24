@@ -1,10 +1,10 @@
 from CommonServerPython import __line__
-from .. import demistomock as demisto, CommonServerPython
+from ..demistomock import *
 from ..CommonServerPython import *
-from ..CommonServerUserPython import *
+# from ..CommonServerUserPython import *
 
 register_module_line('ModifyTimerOnStageChange', 'start', __line__())
-from typing import Dict, Any
+from typing import Dict
 import json
 import datetime
 import yaml
@@ -117,15 +117,15 @@ def modify_timer(args: Dict[str, Any]) -> Any:
         if act.get('weekdayOnly') and is_workday:
             xsoar_command = mapped_acts.get(act.get('action'))
             timer = act.get('timerName')
-            params = {"timerField": timer}
-            demisto.executeCommand(xsoar_command, params)
+            command_params = {"timerField": timer}
+            demisto.executeCommand(xsoar_command, command_params)
             action_taken = f'Action {xsoar_command} taken on Timer: {timer}'
             actions_taken.append(action_taken)
         else:
             xsoar_command = mapped_acts.get(act.get('action'))
             timer = act.get('timerName')
-            params = {"timerField": timer}
-            demisto.executeCommand(xsoar_command, params)
+            command_params = {"timerField": timer}
+            demisto.executeCommand(xsoar_command, command_params)
             action_taken = f'Action {xsoar_command} taken on Timer: {timer}'
             actions_taken.append(action_taken)
     return actions_taken
