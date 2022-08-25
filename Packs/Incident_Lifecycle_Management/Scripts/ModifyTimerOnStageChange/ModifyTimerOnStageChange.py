@@ -1,9 +1,11 @@
 from CommonServerPython import __line__
-from ..demistomock import *
-from ..CommonServerPython import *
+from demistomock import *
+from CommonServerPython import *
+
 # from ..CommonServerUserPython import *
 
 register_module_line('ModifyTimerOnStageChange', 'start', __line__())
+'''IMPORTS'''
 from typing import Dict
 import json
 import datetime
@@ -13,8 +15,13 @@ import yaml
 # from textwrap import indent
 
 '''GLOBALS'''
-LIST_TYPE: str = ''
+# noinspection DuplicatedCode
+LIST_TYPE: str = r'YAML'
+LIST_NAME: str = r'IncidentStageManagement'
+FIRST_STAGE: str = r'Queued'
+FIRST_TIMER: str = r'timetoacknowledgement'
 
+# noinspection DuplicatedCode
 ''' STANDALONE FUNCTION '''
 
 
@@ -45,16 +52,18 @@ def load_list(xsoar_list: str) -> Union[Dict, str]:
         return raw_data
 
 
+# noinspection DuplicatedCode
 def is_working_day(list_name: str = '') -> bool:
-    days_of_week = ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
+    days_of_week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
     work_week = load_list(list_name)
+    work_week = demisto.get(work_week, 'WorkWeek')
     start_day = str(work_week.get('StartDay')).lower()
     start_day = days_of_week.index(start_day)
     last_day = str(work_week.get('LastDay')).lower()
     last_day = days_of_week.index(last_day)
     start_time = work_week.get('StartTime')
     stop_time = work_week.get('StopTime')
-    now = datetime.now(timezone.utc)
+    now = datetime.datetime.now(timezone.utc)
     today = days_of_week[now.weekday()]
     # if today:
     #     print()
@@ -87,8 +96,9 @@ def args_to_string(args: Dict, arg_name: str) -> str:
     args = args.get(arg_name, None)
     if not args:
         return str(None)
-    stripped_arg = str().strip()
-    return stripped_arg
+    else:
+        stripped_arg = str(args).strip()
+        return stripped_arg
 
 
 ''' COMMAND FUNCTION '''
@@ -98,34 +108,40 @@ def modify_timer(args: Dict[str, Any]) -> Any:
     mapped_acts = {"start": "startTimer",
                    "stop": "stopTimer",
                    "pause": "pauseTimer"}
-    list_name = args_to_string(args, 'xsoar-list')
+    list_name = LIST_NAME
     if not list_name:
-        raise ValueError('xsoar_list not specified')
+        raise ValueError('xsoar list not specified')
     old: str = args_to_string(args, 'old')
     new: str = args_to_string(args, 'new')
     config_dict = load_list(list_name)
+    if old == str(None) or old is None or old == '':
+        set_stage_params = {'incidentstage': FIRST_STAGE}
+        execute_command('setIncident', args=set_stage_params)
+        timer_params = {'timerField': FIRST_TIMER}
+        demisto.executeCommand('startTimer', timer_params)
+        return_warning(f'Setting Incident from stage:{old} to {FIRST_STAGE}.\nStarted {FIRST_TIMER}', exit=True)
     # Return Error if new stage is not in allowed Next Stages
     if not check_next_stage(old=old, new=new, config_dict=config_dict):
         next_stages = config_dict.get(old).get('NextStages').keys()
         err_str = f'Moving From Stage: {old} to Stage: {new} is not allowed. Allowed stages are: {next_stages}'
         return_error(error=err_str, message=err_str)
     # Take action on timers
-    is_workday = is_working_day()  # Check if it is a working day
+    is_workday = is_working_day(list_name)  # Check if it is a working day
     acts = config_dict.get(old).get('NextStages').get(new)
     actions_taken = []
     for act in acts:
         if act.get('weekdayOnly') and is_workday:
             xsoar_command = mapped_acts.get(act.get('action'))
             timer = act.get('timerName')
-            command_params = {"timerField": timer}
-            demisto.executeCommand(xsoar_command, command_params)
+            set_stage_params = {"timerField": timer}
+            demisto.executeCommand(xsoar_command, set_stage_params)
             action_taken = f'Action {xsoar_command} taken on Timer: {timer}'
             actions_taken.append(action_taken)
         else:
             xsoar_command = mapped_acts.get(act.get('action'))
             timer = act.get('timerName')
-            command_params = {"timerField": timer}
-            demisto.executeCommand(xsoar_command, command_params)
+            set_stage_params = {"timerField": timer}
+            demisto.executeCommand(xsoar_command, set_stage_params)
             action_taken = f'Action {xsoar_command} taken on Timer: {timer}'
             actions_taken.append(action_taken)
     return actions_taken
@@ -136,12 +152,14 @@ def modify_timer(args: Dict[str, Any]) -> Any:
 
 def main():
     try:
-        global LIST_TYPE
-        LIST_TYPE = args_to_string(demisto.args(), 'type')
+        # global LIST_TYPE
+        # LIST_TYPE = args_to_string(demisto.args(), 'type')
         # TODO: replace the invoked command function with yours
-        return_results(modify_timer(args=demisto.args()))
+        return_results(modify_timer(demisto.args()))
     except Exception as ex_str:
-        return_error(f'Failed to execute Modify Timer On Stage Change. Error: {str(ex_str)}')
+        print(traceback.format_exc())
+        traceback.print_exc()
+        # return_error(f'Failed to execute Modify Timer On Stage Change. Error: {str(ex_str)}')
 
 
 ''' ENTRY POINT '''

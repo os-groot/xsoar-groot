@@ -1,30 +1,10 @@
-args:
-- default: false
-  defaultValue: IncidentStageManagement
-  description: Name of XSOAR List containing the configuration defining the actions
-    on timers as incidents move through different stages
-  isArray: false
-  name: xsoar-list
-  required: true
-  secret: false
-- auto: PREDEFINED
-  default: false
-  defaultValue: YAML
-  description: Whether the list is YAML or JSON
-  isArray: false
-  name: type
-  predefined:
-  - YAML
-  - JSON
-  required: false
-  secret: false
 comment: Modifies Incident Stage Based on configuration provided in XSOAR List passed
   into xsoar-list
 commonfields:
   id: Modify Timer On Stage Change
   version: -1
 enabled: false
-name: Modify Timer On Stage Change
+name: ModifyTimerOnStageChange
 script: '-'
 subtype: python3
 system: false

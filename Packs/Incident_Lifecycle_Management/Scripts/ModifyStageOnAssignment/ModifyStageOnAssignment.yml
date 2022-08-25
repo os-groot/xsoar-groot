@@ -1,17 +1,16 @@
 args:
 - default: false
-  defaultValue: Initial
-  description: The stage reperesneting when an analyst acknowledged the incident
+  defaultValue: TestArg
   isArray: false
-  name: acknowledgment-stage
-  required: true
+  name: testArg
+  required: false
   secret: false
 comment: Modifies Incident Stage On Owner Change
 commonfields:
   id: Modify Stage On Assignment
   version: -1
 enabled: false
-name: Modify Stage On Assignment
+name: ModifyStageOnAssignment
 script: '-'
 subtype: python3
 system: false

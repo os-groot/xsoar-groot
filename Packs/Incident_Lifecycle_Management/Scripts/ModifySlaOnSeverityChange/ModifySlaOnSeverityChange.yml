@@ -1,21 +1,12 @@
 args:
 - default: false
-  defaultValue: Timers-SLA-By-Severity
-  description: List name containg JSON or YAML configuration of SLAs for timers by
-    severity
   isArray: false
-  name: xsoar-list
-  required: true
+  name: old
+  required: false
   secret: false
-- auto: PREDEFINED
-  default: false
-  defaultValue: JSON
-  description: JSON or YAML
+- default: false
   isArray: false
-  name: type
-  predefined:
-  - YAML
-  - JSON
+  name: new
   required: false
   secret: false
 comment: Modifies SLA of various timers when severity changes
@@ -23,12 +14,12 @@ commonfields:
   id: Modify SLA On Severity Change
   version: -1
 enabled: false
-name: Modify SLA On Severity Change
+name: ModifySLAOnSeverityChange
 script: '-'
 subtype: python3
 system: false
 tags:
-- basescript
+- field-change-triggered
 timeout: '0'
 type: python
 dockerimage: demisto/python3:3.10.5.31797
