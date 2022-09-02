@@ -122,7 +122,6 @@ def modify_sla(args: Dict):
 
 def main():
     try:
-        # TODO: replace the invoked command function with yours
         return_results(modify_sla(demisto.args()))
     except Exception as ex_str:
         print(traceback.format_exc())

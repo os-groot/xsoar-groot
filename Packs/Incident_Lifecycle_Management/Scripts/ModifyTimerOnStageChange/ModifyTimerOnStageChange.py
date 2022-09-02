@@ -154,7 +154,6 @@ def main():
     try:
         # global LIST_TYPE
         # LIST_TYPE = args_to_string(demisto.args(), 'type')
-        # TODO: replace the invoked command function with yours
         return_results(modify_timer(demisto.args()))
     except Exception as ex_str:
         print(traceback.format_exc())

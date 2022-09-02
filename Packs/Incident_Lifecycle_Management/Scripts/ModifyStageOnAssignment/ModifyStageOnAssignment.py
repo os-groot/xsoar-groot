@@ -172,7 +172,6 @@ def modify_stage(args: Dict):
 
 def main():
     try:
-        # TODO: replace the invoked command function with yours
         args = demisto.args()
         return_results(modify_stage(args=args))
     except Exception as ex_str:

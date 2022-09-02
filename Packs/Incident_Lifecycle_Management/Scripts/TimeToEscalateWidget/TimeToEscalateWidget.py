@@ -67,7 +67,7 @@ def sec_to_readable(secs=0, time_delta=True):
 def check_sla(timer=None, sla=None, duration=None) -> str:
     if sla is None:
         timer_sla = timer.get('sla', 0)
-    else:\
+    else:
         timer_sla = sla
     if duration is None:
         timer_duration = timer.get('totalDuration') / 60
@@ -195,7 +195,6 @@ def main():
     try:
         args: dict = demisto.args()
         return_results(build_table(args))
-
     except Exception:
         demisto.error(traceback.format_exc())  # print the traceback
         return_error(f'Failed to execute TimeToEscalateWidget. Error: {traceback.format_exc()}')
