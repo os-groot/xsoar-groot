@@ -7,6 +7,8 @@ args:
 - default: false
   isArray: false
   name: new
+  predefined:
+  - ''
   required: false
   secret: false
 comment: Modifies SLA of various timers when severity changes

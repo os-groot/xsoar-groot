@@ -1,0 +1,12 @@
+commonfields:
+  id: 6392ad25-ed19-4d90-a18f-72f078425ece
+  version: -1
+enabled: false
+name: KPIMetricsWidget
+script: '-'
+subtype: python3
+system: false
+tags:
+- widget
+timeout: '0'
+type: python

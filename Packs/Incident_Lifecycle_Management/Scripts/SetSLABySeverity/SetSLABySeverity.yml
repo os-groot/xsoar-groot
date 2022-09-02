@@ -1,0 +1,30 @@
+args:
+- default: false
+  defaultValue: Timers-SLA-By-Severity
+  description: List Containing SLA to severity mapping
+  isArray: false
+  name: slaSeverityList
+  required: false
+  secret: false
+- auto: PREDEFINED
+  default: false
+  defaultValue: Low
+  isArray: false
+  name: severity
+  predefined:
+  - Low
+  - Medium
+  - High
+  - Critical
+  required: false
+  secret: false
+commonfields:
+  id: 1fa6694e-6d58-4eaa-8b23-81e41b55121e
+  version: -1
+enabled: false
+name: SetSLABySeverity
+script: '-'
+subtype: python3
+system: false
+timeout: '0'
+type: python

@@ -1,0 +1,10 @@
+commonfields:
+  id: c6ab8cd9-143a-4879-8c15-c8437a20b8dc
+  version: -1
+enabled: false
+name: TimeToEscalateWidget
+script: '-'
+subtype: python3
+system: false
+timeout: '0'
+type: python

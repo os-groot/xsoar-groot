@@ -1,9 +1,9 @@
-from CommonServerPython import __line__
 import demistomock as demisto
 from CommonServerPython import *
+from CommonServerPython import __line__
 from CommonServerUserPython import *
 
-register_module_line('ModifySLAOnSeverityChange', 'start', __line__())
+register_module_line('SetSLABySeverity', 'start', __line__())
 '''IMPORTS'''
 from typing import Dict, Any
 import yaml
@@ -13,7 +13,9 @@ from datetime import datetime
 '''GLOBALS'''
 LIST_TYPE: str = r'JSON'
 LIST_NAME: str = r'Timers-SLA-By-Severity'
+a = r'slaSeverityList'
 
+# noinspection DuplicatedCode
 ''' STANDALONE FUNCTION '''
 
 
@@ -73,25 +75,28 @@ def load_list(xsoar_list: str) -> Union[Dict, str]:
 
 
 # noinspection DuplicatedCode
-def modify_sla(args: Dict):
+def modify_sla_by_severity(args: Dict):
     list_name = LIST_NAME
-    old: str = args_to_string(args, 'old')
-    new: str = args_to_string(args, 'new')
-    if str(new) in ['Unknown', 'Informational', 'Low', 'Medium', 'High', 'Critical']:
-        severity_map = {'Low': 'P4', 'Medium': 'P3', 'High': 'P2', 'Critical': 'P1'}
+    list_name: str = args_to_string(args, 'slaSeverityList')
+    severity: str = args_to_string(args, 'severity')
+    if str(severity) in ['Unknown', 'Informational', 'Low', 'Medium', 'High', 'Critical']:
+        severity_map = {'Unknown': 'P4', 'Informational': 'P4', 'Low': 'P4',
+                        'Medium': 'P3', 'High': 'P2', 'Critical': 'P1'}
     else:
-        severity_map = {'1': 'P4', '2': 'P3', '3': 'P2', '4': 'P1'}
+        severity_map = {'0': 'P4', '1': 'P4', '2': 'P3', '3': 'P2', '4': 'P1'}
+        print(f'Using Mapping: {severity_map} for severity: {severity}')
     config_dict = load_list(list_name)
     inc = demisto.incident()
+    xsoar_severity = severity
+    severity: str = severity_map.get(xsoar_severity)
+    # print(f'Severity: {severity}')
     actions_taken = []
     for timer_conf in config_dict:
-        timer_conf = config_dict.get(timer_conf)
-        severity: str = severity_map.get(new)
-        # print(f'Severity: {new}')
+        timer_conf = config_dict.get(timer_conf, 'Empty')
         # print(f'Severity MAP: {severity}')
-        sla = timer_conf.get(severity)
+        sla = timer_conf.get(severity, 'Empty')
         sla = sla  # Get SLA in minutes for the severity for this timer
-        cli_name = timer_conf.get("cli")
+        cli_name = timer_conf.get("cli", 'Empty')
         timer = demisto.get(inc, f'CustomFields.{cli_name}', defaultParam='Empty')
         due_date = timer.get('dueDate')
         run_status = demisto.get(timer, 'runStatus')
@@ -122,8 +127,7 @@ def modify_sla(args: Dict):
 
 def main():
     try:
-        # TODO: replace the invoked command function with yours
-        return_results(modify_sla(demisto.args()))
+        return_results(modify_sla_by_severity(demisto.args()))
     except Exception as ex_str:
         print(traceback.format_exc())
         traceback.print_exc()
@@ -134,4 +138,5 @@ def main():
 
 if __name__ in ('__main__', '__builtin__', 'builtins'):
     main()
-register_module_line('ModifySLAOnSeverityChange', 'end', __line__())
+register_module_line('SetSLABySeverity', 'end', __line__())
+

@@ -11,13 +11,27 @@ import traceback
 import datetime
 
 '''GLOBALS'''
+# noinspection DuplicatedCode
 PRE_ACKNOWLEDGMENT_STAGE = r'Queued'
 ACKNOWLEDGMENT_STAGE = r'Initial'
-# noinspection DuplicatedCode
+ACKNOWLEDGMENT_FIELD = r'incidentacknowledgementdate'
+TZ = '+0300'
 LIST_TYPE: str = r'YAML'
 LIST_NAME: str = r'IncidentStageManagement'
 
 ''' STANDALONE FUNCTION '''
+
+
+def str_to_iso_format_utc(str_date, local_tz='+0300', to_tz='UTC',
+                          return_date_time=False, is_utc=False) -> Union[str, Any]:
+    str_date = arg_to_datetime(str_date.strip(), is_utc=is_utc)  # Convert String to DateTime
+    parser_settings = settings = {'TIMEZONE': local_tz, 'TO_TIMEZONE': to_tz,
+                                  'RETURN_AS_TIMEZONE_AWARE': True}
+    str_date_parsed = dateparser.parse(str_date.isoformat(), settings=parser_settings)
+    if return_date_time:
+        return str_date_parsed
+    else:
+        return str_date_parsed.isoformat()
 
 
 def load_list(xsoar_list: str) -> Union[Dict, str]:
@@ -88,6 +102,9 @@ def is_working_day(list_name: str = '') -> bool:
             return is_weekday
 
 
+'''ACTION FUNCTIONS'''
+
+
 # noinspection DuplicatedCode
 def modify_timer(args: Dict[str, Any]) -> Any:
     mapped_acts = {"start": "startTimer",
@@ -101,6 +118,7 @@ def modify_timer(args: Dict[str, Any]) -> Any:
     is_workday = is_working_day(list_name)  # Check if it is a working day
     acts = config_dict.get(PRE_ACKNOWLEDGMENT_STAGE).get('NextStages').get(ACKNOWLEDGMENT_STAGE)
     actions_taken = []
+    inc = demisto.incident()
     for act in acts:
         if act.get('weekdayOnly') and is_workday:
             xsoar_command = mapped_acts.get(act.get('action'))
@@ -119,6 +137,17 @@ def modify_timer(args: Dict[str, Any]) -> Any:
     return actions_taken
 
 
+def modify_fields():
+    now = datetime.datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+    now_iso = str_to_iso_format_utc(str_date=now_iso, to_tz=TZ)
+    command_params = {ACKNOWLEDGMENT_FIELD: now_iso}
+    execute_command('setIncident', args=command_params)
+    action_taken = f'Incident Acknowledged on: {now_iso}'
+    additional_actions = [action_taken]
+    return additional_actions
+
+
 ''' COMMAND FUNCTION '''
 
 
@@ -131,6 +160,7 @@ def modify_stage(args: Dict):
         execute_command('setIncident', args=params)
         action_taken = f'Set Incident Stage to: {acknowledgment_stage} with owner: {new}'
         additional_actions = [action_taken] + modify_timer(args)
+        additional_actions += modify_fields()
     else:
         action_taken = f'No Action Taken Owner Changed To: {new} From: {old}'
         additional_actions = [action_taken]
@@ -148,7 +178,7 @@ def main():
     except Exception as ex_str:
         print(traceback.format_exc())
         traceback.print_exc()
-       # return_error(f'Failed to execute Modify Stage On Assignment. Error: {str(ex_str)}')
+    # return_error(f'Failed to execute Modify Stage On Assignment. Error: {str(ex_str)}')
 
 
 ''' ENTRY POINT '''
