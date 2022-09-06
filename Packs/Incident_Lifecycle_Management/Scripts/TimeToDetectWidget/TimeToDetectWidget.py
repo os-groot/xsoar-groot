@@ -110,7 +110,7 @@ def set_columns(incident, fields_map=None):
     detection_timer = demisto.get(incident, DETECTION_TIMER)
     detection_timer_sla = detection_timer.get('sla', 30)  # Allocated SLA in minutes
     xsoar_created_time = demisto.get(incident, 'created')  # Creation date of incident in XSOAR
-    xsoar_created_time = str_date_parser(xsoar_created_time, return_date_time=True)  # Creation date of incident in XSOAR
+    xsoar_created_time = str_date_parser(xsoar_created_time, return_date_time=True)  # Creation date of in XSOAR
     # now = dtime.datetime.now(timezone.utc)
     # Calculate Event End
     # default_time = now + timedelta(minutes=int(60))
