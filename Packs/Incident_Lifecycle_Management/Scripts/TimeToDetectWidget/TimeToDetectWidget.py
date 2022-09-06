@@ -111,38 +111,7 @@ def set_columns(incident, fields_map=None):
     detection_timer_sla = detection_timer.get('sla', 30)  # Allocated SLA in minutes
     xsoar_created_time = demisto.get(incident, 'created')  # Creation date of incident in XSOAR
     xsoar_created_time = str_date_parser(xsoar_created_time, return_date_time=True)  # Creation date of in XSOAR
-    # now = dtime.datetime.now(timezone.utc)
-    # Calculate Event End
-    # default_time = now + timedelta(minutes=int(60))
-    # default_time = default_time.isoformat()
-    # default_now = now
-    # default_now = default_now.isoformat(timespec="seconds")
-    # event_times = demisto.get(incident, EVENT_TIME_FIELD)
-    # event_times = split_lines(event_times)
-    # if event_times is not None and len(event_times) > 0 and event_times != "[]":
-    #     try:
-    #         event_times = [str_date_parser(e_time, to_tz=TZ, return_date_time=True)
-    #                        for e_time in event_times if e_time is not None
-    #                        and str(e_time) != str(None) and e_time != "" and e_time != "[]"]
-    #     except Exception:
-    #         tb = traceback.format_exc()
-    #         return_error(f'Failed to execute TimeToEscalateWidget. Error: {tb}')
-    #     event_times = sorted(event_times)
-    #     event_end = event_times[-1] if len(event_times) > 0 else None
-    # else:
-    #     event_end = default_now
-    # # Handle failed Calculate Event End Time
-    # if event_end is None or str(event_end) == '' or str(event_end) == str(None) \
-    #         or str(event_end) == str(default_now):
-    #     event_end = default_now
-    #     display_inc['Events End Time'] = f'(Default): {event_end}'
-    # else:
-    #     if isinstance(event_end, dtime.datetime):
-    #         event_end = event_end.isoformat()
-    #     display_inc['Events End Time'] = event_end
-    # event_end = str_date_parser(str(event_end), to_tz=TZ)
-    # event_end = dtime.datetime.fromisoformat(event_end)
-    # Get Splunk Search Time
+    now = dtime.datetime.now(timezone.utc)
     info_search_time = labels.get('info_search_time')
     info_search_time = int(float(info_search_time)) if info_search_time is not None else ''
     used_splunk_info_search_time = False
